@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GET Data Berdasarkan ID</title>
+</head>
+
+<body>
+
+    <h2>Cari User</h2>
+
+    <input type="number" id="idUser" placeholder="Masukkan ID (1-10)">
+    <button onclick="cariUser()">Cari</button>
+
+    <div id="hasil"></div>
+
+    <script>
+        function cariUser() {
+
+            let id = document.getElementById("idUser").value;
+
+            fetch("https://jsonplaceholder.typicode.com/users/" + id)
+                .then(response => response.json())
+                .then(data => {
+
+                    document.getElementById("hasil").innerHTML = `
+        <h3>${data.name}</h3>
+        <p>Email : ${data.email}</p>
+        <p>Kota : ${data.address.city}</p>
+        `;
+
+                });
+
+        }
+    </script>
+
+</body>
+
+</html>

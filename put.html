@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>PUT API</title>
+</head>
+
+<body>
+
+    <h2>Update Data</h2>
+
+    <button onclick="ubahData()">Update</button>
+
+    <pre id="hasil"></pre>
+
+    <script>
+
+        function ubahData() {
+
+            fetch("https://jsonplaceholder.typicode.com/users/1", {
+
+                method: "PUT",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    name: "Andre Update",
+                    email: "baru@email.com"
+
+                })
+
+            })
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    document.getElementById("hasil").textContent =
+                        JSON.stringify(data, null, 2);
+
+                });
+
+        }
+
+    </script>
+
+</body>
+
+</html>

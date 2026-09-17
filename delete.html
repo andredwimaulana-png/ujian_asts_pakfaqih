@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>DELETE API</title>
+</head>
+
+<body>
+
+    <h2>Hapus Data</h2>
+
+    <button onclick="hapusData()">Hapus</button>
+
+    <p id="hasil"></p>
+
+    <script>
+
+        function hapusData() {
+
+            fetch("https://jsonplaceholder.typicode.com/users/1", {
+
+                method: "DELETE"
+
+            })
+
+                .then(response => {
+
+                    if (response.ok) {
+
+                        document.getElementById("hasil").innerHTML =
+                            "Data berhasil dihapus (simulasi).";
+
+                    }
+
+                });
+
+        }
+
+    </script>
+
+</body>
+
+</html>

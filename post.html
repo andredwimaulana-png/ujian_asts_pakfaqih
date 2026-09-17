@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>POST API</title>
+</head>
+
+<body>
+
+    <button onclick="tambahData()">Tambah Data</button>
+
+    <pre id="hasil"></pre>
+
+    <script>
+
+        function tambahData() {
+
+            fetch("https://jsonplaceholder.typicode.com/users", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    name: "Andre",
+                    email: "andre@email.com"
+
+                })
+
+            })
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    document.getElementById("hasil").textContent =
+                        JSON.stringify(data, null, 2);
+
+                });
+
+        }
+
+    </script>
+
+</body>
+
+</html>

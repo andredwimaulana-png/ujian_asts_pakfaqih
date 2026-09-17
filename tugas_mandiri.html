@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tugas Mandiri API - Todo List</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f4f6f9;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+            padding: 30px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        button {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: .3s;
+        }
+
+        button:hover {
+            background: #0b5ed7;
+        }
+
+        button:disabled {
+            background: gray;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .success {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .info {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            display: none;
+        }
+
+        th {
+            background: #0d6efd;
+            color: white;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        tbody tr:hover {
+            background: #f5f5f5;
+        }
+
+        .selesai {
+            color: white;
+            background: green;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .belum {
+            color: white;
+            background: red;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        /* ===== Pagination ===== */
+        .pagination {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            padding: 8px 14px;
+            font-size: 14px;
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #0d6efd;
+            color: white;
+        }
+
+        .pagination button.aktif {
+            background: #0d6efd;
+            color: white;
+        }
+
+        .pagination button:disabled {
+            background: #f1f1f1;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .info-halaman {
+            text-align: center;
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+            display: none;
+        }
+
+        @media(max-width:768px) {
+
+            body {
+                padding: 15px;
+            }
+
+            .info {
+                flex-direction: column;
+            }
+
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h2>📋 Daftar Tugas (JSONPlaceholder API)</h2>
+
+        <button id="btn" onclick="loadTodo()">
+            Tampilkan Daftar Tugas
+        </button>
+
+        <div id="status"></div>
+
+        <div class="info">
+
+            <div class="card">
+                Total Data
+                <h3 id="total">0</h3>
+            </div>
+
+            <div class="card">
+                Selesai
+                <h3 id="selesai">0</h3>
+            </div>
+
+            <div class="card">
+                Belum
+                <h3 id="belum">0</h3>
+            </div>
+
+        </div>
+
+        <table id="tabel">
+
+            <thead>
+
+                <tr>
+
+                    <th>No</th>
+                    <th>Judul Tugas</th>
+                    <th>Status</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="hasil"></tbody>
+
+        </table>
+
+        <div class="info-halaman" id="infoHalaman"></div>
+
+        <div class="pagination" id="pagination"></div>
+
+    </div>
+
+    <script>
+
+        const JUMLAH_PER_HALAMAN = 5;
+
+        let semuaData = [];
+        let halamanSekarang = 1;
+
+        function loadTodo() {
+
+            const status = document.getElementById("status");
+            const btn = document.getElementById("btn");
+
+            btn.disabled = true;
+            btn.innerText = "Loading...";
+
+            status.style.display = "block";
+            status.className = "loading";
+            status.innerHTML = "⏳ Mengambil data dari server...";
+
+            fetch("https://jsonplaceholder.typicode.com/todos")
+
+                .then(res => {
+
+                    if (!res.ok) {
+
+                        throw new Error("Status : " + res.status);
+
+                    }
+
+                    return res.json();
+
+                })
+
+                .then(data => {
+
+                    // simpan 30 data pertama ke variabel global
+                    semuaData = data.slice(0, 30);
+                    halamanSekarang = 1;
+
+                    const selesai = semuaData.filter(item => item.completed).length;
+                    const belum = semuaData.length - selesai;
+
+                    document.getElementById("tabel").style.display = "table";
+                    document.getElementById("infoHalaman").style.display = "block";
+                    document.getElementById("pagination").style.display = "flex";
+
+                    document.getElementById("total").innerText = semuaData.length;
+                    document.getElementById("selesai").innerText = selesai;
+                    document.getElementById("belum").innerText = belum;
+
+                    tampilkanHalaman(halamanSekarang);
+
+                    status.className = "success";
+                    status.innerHTML = "✅ Berhasil memuat " + semuaData.length + " data tugas.";
+
+                })
+
+                .catch(error => {
+
+                    status.className = "error";
+                    status.innerHTML = "❌ " + error.message;
+
+                })
+
+                .finally(() => {
+
+                    btn.disabled = false;
+                    btn.innerText = "Tampilkan Daftar Tugas";
+
+                });
+
+        }
+
+        function tampilkanHalaman(halaman) {
+
+            const totalHalaman = Math.ceil(semuaData.length / JUMLAH_PER_HALAMAN);
+
+            // batasi halaman agar tidak keluar rentang
+            if (halaman < 1) halaman = 1;
+            if (halaman > totalHalaman) halaman = totalHalaman;
+
+            halamanSekarang = halaman;
+
+            const awal = (halaman - 1) * JUMLAH_PER_HALAMAN;
+            const akhir = awal + JUMLAH_PER_HALAMAN;
+            const dataHalamanIni = semuaData.slice(awal, akhir);
+
+            let html = "";
+
+            dataHalamanIni.forEach((item, index) => {
+
+                const nomorUrut = awal + index + 1;
+
+                html += `
+
+<tr>
+
+<td>${nomorUrut}</td>
+
+<td>${item.title}</td>
+
+<td>
+
+${item.completed
+                        ?
+                        "<span class='selesai'>Selesai</span>"
+                        :
+                        "<span class='belum'>Belum Selesai</span>"
+                    }
+
+</td>
+
+</tr>
+
+`;
+
+            });
+
+            document.getElementById("hasil").innerHTML = html;
+
+            document.getElementById("infoHalaman").innerText =
+                "Menampilkan " + (awal + 1) + " - " + Math.min(akhir, semuaData.length) +
+                " dari " + semuaData.length + " data";
+
+            renderPagination(totalHalaman);
+
+        }
+
+        function renderPagination(totalHalaman) {
+
+            const pagination = document.getElementById("pagination");
+            let html = "";
+
+            // tombol Sebelumnya
+            html += `<button onclick="tampilkanHalaman(${halamanSekarang - 1})" ${halamanSekarang === 1 ? "disabled" : ""}>‹ Sebelumnya</button>`;
+
+            // tombol nomor halaman
+            for (let i = 1; i <= totalHalaman; i++) {
+
+                html += `<button onclick="tampilkanHalaman(${i})" class="${i === halamanSekarang ? "aktif" : ""}">${i}</button>`;
+
+            }
+
+            // tombol Selanjutnya
+            html += `<button onclick="tampilkanHalaman(${halamanSekarang + 1})" ${halamanSekarang === totalHalaman ? "disabled" : ""}>Selanjutnya ›</button>`;
+
+            pagination.innerHTML = html;
+
+        }
+
+    </script>
+
+</body>
+
+</html>
